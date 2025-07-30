@@ -50,7 +50,8 @@ Fill out this short form: [Leave feedback](https://forms.gle/Pg4qnUqrroSxsvy98)
 
 If you're a language learner or dev who wants to collaborate, reach out:
 - GitHub: [@WolveKiller1](https://github.com/WolveKiller1)
-- (Add email or Discord if you want)
+- Or join the discord server:
+- [https://discord.gg/neSfaQWQ](url)
 
 ---
 
