@@ -6,6 +6,21 @@
 </head>
 <body>
   <h1>Rylingo (Beta)</h1>
+  <div id="progress">Sentences practiced: 0</div>
+  <div id="globalStats">
+  <h3>Your Progress (All Time)</h3>
+  <p id="attempts">Attempts: 0</p>
+  <p id="averageScore">Average Score: 0</p>
+  <p id="todayAttempts">Today’s Attempts: 0</p>
+  </div>
+  <div id="dailyChallenge" style="margin-bottom:1.5rem;">
+    <h2>🌟 Today’s Challenge</h2>
+    <p id="dailyChallengeText" style="cursor:pointer; color:#007bff; text-decoration:underline;">
+      Loading...
+    </p>
+  </div>
+  <p id="challengeStatus" style="font-weight:bold; color:green;"></p>
+  <div id="encouragement" style="margin-top:1rem;font-weight:bold;"></div>
   <h2>🔤 Word Practice</h2>
   <input type="text" id="wordInput" placeholder="Enter a word" />
   <button onclick="lookupWord()">🔊 Hear Pronunciation</button>
@@ -14,24 +29,43 @@
   <hr>
 
   <h2>🗣️ Sentence Practice</h2>
-  <input type="text" id="targetText" placeholder="Type a sentence to practice" />
+  <button id="nextSentenceBtn">Next Sentence</button>
+  <p id="targetSentenceDisplay"></p>
 
-  <button id="recordBtn">🎤 Start Recording</button>
-  <button id="stopBtn" disabled>⏹ Stop</button>
-  <div id="audioPlayback"></div>
-
-  <button id="evaluateBtn">💬 Evaluate My Speech</button>
-  <div id="aiFeedback"></div>
-
-  <div id="feedbackMock">
-    <button onclick="markConfidence(true)">✅ Said it well</button>
-    <button onclick="markConfidence(false)">❌ Need to retry</button>
+  <input type="hidden" id="targetSentence" name="targetSentence" />
+  <!-- Hidden input so script.js can pass the target to backend -->
+  <div class="controls">
+    <button id="recordBtn">🎤 Start Recording</button>
+    <button id="stopBtn" disabled>⏹ Stop</button>
+    <button id="evaluateBtn">💬 Evaluate My Speech</button>
+    <button id="retryBtn" style="display:none;" onclick="tryAgain()">🔄 Try Again</button>
   </div>
 
+  <p id="targetSentenceDisplay"></p>
+  <div id="results"></div>
+  <div id="audioPlayback"></div>
+
+  <div id="aiFeedback"></div>
+
+  <div id="results"></div>
   <button onclick="viewLog()">📜 View Practice Log</button>
-  <div id="logOutput"></div>
+  <div id="practiceHistory" style="margin-top:2rem; padding:1rem; border:1px solid #000000; border-radius:8px; background:#007bff;">
+    <h2>📜 Practice Log</h2>
+    <div style="margin-bottom:0.5rem;">
+      <button onclick="viewLog('recent')">Recent</button>
+      <button onclick="viewLog('today')">Today</button>
+      <button onclick="viewLog('best')">Best</button>
+      <button onclick="viewLog('all')">All</button>
+      <button onclick="exportLog('json')">⬇️ Export JSON</button>
+      <button onclick="exportLog('csv')">⬇️ Export CSV</button>
+      <ul id="logOutput" style="list-style-type:none; padding-left:0;"></ul>
+      <button onclick="resetProgress()">🗑 Reset Progress</button>
+    </div>
+    
+  </div>
   <hr>
   <p style="margin-top: 2rem; font-size: 0.95rem;">
+  <canvas id="confettiCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;"></canvas>
   💬 Tried it? <a href="https://forms.gle/Pg4qnUqrroSxsvy98" target="_blank">Leave feedback here</a> — help shape the future of Rylingo.
   </p>
   <p><strong>Coming Soon:</strong> AI Feedback powered by GPT-4o</p>
