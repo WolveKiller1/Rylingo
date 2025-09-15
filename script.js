@@ -1,3 +1,88 @@
+// --- Day 20 helpers ---
+let practiceCount = Number(localStorage.getItem("practiceCount") || 0);
+let currentTarget = ""; // keep the current sentence here
+
+function updateProgress() {
+  localStorage.setItem("practiceCount", practiceCount);
+  const el = document.getElementById("progress");
+  if (el) el.innerText = `Sentences practiced: ${practiceCount}`;
+}
+
+function colorFor(score) {
+  const n = Number(score || 0);
+  if (n >= 95) return "green";
+  if (n >= 75) return "orange";
+  return "red";
+}
+
+function renderResults(target, transcription, score, feedback) {
+  const box = document.getElementById("results");
+  if (!box) return;
+
+  if (!transcription || transcription.trim() === "") {
+    box.innerHTML = `<p>🔇 I couldn't hear you. Try again.</p>`;
+    return;
+  }
+
+  const color = colorFor(score);
+  box.innerHTML = `
+    <div class="result-card" style="padding:12px;border-radius:10px;background:#f9f9f9;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+      <p>✅ <strong>Target</strong>: ${target || "(none)"}</p>
+      <p>🗣️ <strong>You said</strong>: ${transcription}</p>
+      <p><strong>Score</strong>: <span style="color:${color}">${score ?? 0}%</span></p>
+      <p>💡 ${feedback || ""}</p>
+    </div>
+  `;
+
+  const retry = document.getElementById("retryBtn");
+  if (retry) {
+    retry.style.display = "inline-block";
+    console.log("✅ Retry button now visible");
+  }
+} // <-- properly close renderResults here
+
+function tryAgain() {
+  document.getElementById("results").innerHTML = ""; // clear old results
+  document.getElementById("sentenceInput").value = ""; // clear input box if you have one
+}
+
+function pickNextSentence() {
+  // Use your existing getRandomSentence() or sentences[] array
+  const s = (typeof getRandomSentence === "function")
+    ? getRandomSentence()
+    : sentences[Math.floor(Math.random() * sentences.length)];
+
+  currentTarget = s;
+  const display = document.getElementById("targetSentenceDisplay");
+  if (display) display.innerText = s;
+
+  const hidden = document.getElementById("targetSentence");
+  if (hidden) hidden.value = s;
+
+  const results = document.getElementById("results");
+  if (results) results.innerHTML = "";
+
+  const retry = document.getElementById("retryBtn");
+  if (retry) retry.style.display = "none";
+}
+// Sentence bank for practice
+const sentences = [
+  "My name is Alex.",
+  "I like pizza.",
+  "Today is sunny.",
+  "He went to the store.",
+  "I have a dog.",
+  "She drinks water.",
+  "We are happy.",
+  "You look nice.",
+  "I want coffee.",
+  "This is my friend."
+];
+
+function getRandomSentence() {
+  const randomIndex = Math.floor(Math.random() * sentences.length);
+  return sentences[randomIndex];
+}
 async function lookupWord() {
     const word = document.getElementById("wordInput").value.trim();
     const output = document.getElementById("output");
@@ -73,16 +158,54 @@ async function lookupWord() {
   
     const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
     const formData = new FormData();
-    formData.append("audio", audioBlob);
-  
-    const res = await fetch("http://localhost:5000/evaluate", {
+    formData.append("audio", audioBlob);  
+    formData.append("targetSentence", document.getElementById("targetSentence").value);
+    fetch("http://127.0.0.1:5000/evaluate", {
       method: "POST",
-      body: formData
-    });
+      body: formData,
+      })
+      .then(response => response.json())
+      .then(async data => {
+        console.log("✅ Entered results block");
+        console.log("Data from backend:", data); // 🔍 debug
+        
+        renderResults(data.target, data.transcription, data.score, data.feedback);
+
+        // ✅ Show results box
+        document.getElementById("results").style.display = "block";
+
+        practiceCount++;
+        updateProgress();
+
+        // ✅ Send score to backend stats
+        await fetch("http://127.0.0.1:5000/update-stats", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            score: data.score,
+            targetSentence: data.target
+          })
+        });
+
+        // ✅ Refresh stats UI
+        loadStats();
+
+        // ✅ Show retry button
+        const retry = document.getElementById("retryBtn");
+        if (retry) {
+          retry.style.display = "inline-block";
+          console.log("✅ Retry button should now be visible");
+        } else {
+          console.log("❌ Retry button not found in DOM");
+        }
+      })
+
+  .catch(error => console.error("Error:", error));
+
   
     const data = await res.json();
     document.getElementById("aiFeedback").innerText =
-  `🗣 You said: "${data.transcript}"\n\n🧠 Feedback:\n${data.feedback}`;
+  `🗣 You said: "${data.transcription}"\n\n🧠 Feedback:\n${data.feedback}`;
   };  
 function markConfidence(success) {
   const sentence = document.getElementById("targetText").value || "(no sentence)";
@@ -110,3 +233,204 @@ function viewLog() {
     log.map(entry => `<li>${entry.date}: "${entry.sentence}" - ${entry.success ? "✅" : "❌"}</li>`).join('') + 
     "</ul>";
 } 
+document.getElementById("nextSentenceBtn").addEventListener("click", () => {
+  const sentence = getRandomSentence();
+  document.getElementById("targetSentenceDisplay").innerText = sentence;
+
+  // Keep it in a hidden input for backend
+  document.getElementById("targetSentence").value = sentence;
+});
+window.onload = () => {
+  document.getElementById("nextSentenceBtn").click();
+};
+document.getElementById("retryBtn").style.display = "inline-block";
+document.getElementById("retryBtn").onclick = () => {
+  document.getElementById("results").innerHTML = ""; // clear old results
+  startRecording(); // call your record function again
+};
+window.addEventListener("load", () => {
+  updateProgress();
+  pickNextSentence();
+  loadStats(); // new
+  loadDailyChallenge(); // new
+});
+const retryBtn = document.getElementById("retryBtn");
+if (retryBtn) {
+  retryBtn.onclick = () => {
+    document.getElementById("results").innerHTML = ""; 
+    retryBtn.style.display = "none";
+  };
+}
+document.getElementById("retryBtn").addEventListener("click", () => {
+  console.log("🔄 Retrying same sentence...");
+
+  // Clear results box
+  const resultsBox = document.getElementById("results");
+  resultsBox.style.display = "none";
+  resultsBox.innerHTML = "";
+
+  // Reset buttons for a new attempt
+  document.getElementById("recordBtn").disabled = false;
+  document.getElementById("stopBtn").disabled = true;
+  document.getElementById("evaluateBtn").disabled = false;
+
+  // ⚠️ Don't randomize a new sentence — keep the same one
+});
+async function loadStats() {
+  try {
+    const res = await fetch("http://127.0.0.1:5000/stats");
+    const stats = await res.json();
+
+    document.getElementById("attempts").textContent =
+      `Attempts: ${stats.attempts}`;
+    document.getElementById("averageScore").textContent =
+      `Average Score: ${stats.average_score.toFixed(2)}`;
+    document.getElementById("todayAttempts").textContent =
+      `Today’s Attempts: ${stats.today_attempts}`;
+
+    let encouragement = "";
+    if (stats.today_attempts === 0) {
+      encouragement = "👋 Ready for a quick practice?";
+    } else if (stats.today_attempts < 3) {
+      encouragement = "💪 Great start — keep going!";
+    } else if (stats.today_attempts < 10) {
+      encouragement = "🔥 You're building strong confidence today!";
+    } else {
+      encouragement = "🌟 Amazing work — your voice is getting stronger!";
+    }
+    document.getElementById("encouragement").textContent = encouragement;
+
+    // ✅ New: Challenge status
+    if (stats.user_completed_challenge) {
+      document.getElementById("challengeStatus").textContent =
+        "✅ Daily Challenge completed!";
+      launchConfetti();
+    } else {
+      document.getElementById("challengeStatus").textContent =
+        "❌ Daily Challenge not done yet.";
+    }
+
+  } catch (err) {
+    console.error("Failed to load stats:", err);
+  }
+}
+
+async function loadDailyChallenge() {
+  try {
+    const res = await fetch("http://127.0.0.1:5000/daily-challenge");
+    const data = await res.json();
+    document.getElementById("dailyChallengeText").textContent =
+      data.daily_challenge;
+    
+    // Preload it into the target sentence field (optional)
+    document.getElementById("targetSentence").value = data.daily_challenge;
+  } catch (err) {
+    console.error("Failed to load daily challenge:", err);
+  }
+}
+document.getElementById("dailyChallengeText").addEventListener("click", () => {
+  const challenge = document.getElementById("dailyChallengeText").textContent;
+  
+  // Put it into the practice area
+  document.getElementById("targetSentenceDisplay").textContent = challenge;
+  document.getElementById("targetSentence").value = challenge;
+  
+  // Clear old results
+  document.getElementById("results").innerHTML = "";
+  
+  console.log("🌟 Daily Challenge loaded into practice:", challenge);
+});
+function launchConfetti() {
+  const duration = 2 * 1000; // 2 seconds
+  const end = Date.now() + duration;
+
+  (function frame() {
+    // Confetti effect: colored circles falling
+    const canvas = document.getElementById("confettiCanvas");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < 100; i++) {
+      ctx.beginPath();
+      ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = `hsl(${Math.random() * 360}, 100%, 50%)`;
+      ctx.fill();
+    }
+
+    if (Date.now() < end) {
+      requestAnimationFrame(frame);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  })();
+}
+async function viewLog() {
+  try {
+    const res = await fetch("http://127.0.0.1:5000/practice-log");
+    const log = await res.json();
+    const logOutput = document.getElementById("logOutput");
+
+    if (!log || log.length === 0) {
+      logOutput.innerHTML = "<li>No practice history yet.</li>";
+      return;
+    }
+  const maxScore = Math.max(...log.map(e => e.score));
+
+  logOutput.innerHTML = log.map(entry => {
+    let color = "red";
+    if (entry.score >= 95) color = "green";
+    else if (entry.score >= 75) color = "orange";
+
+    const star = entry.score === maxScore ? "⭐ " : "";
+
+    return `<li>
+      ${star}<span style="color:gray">${entry.date}</span> —
+      "${entry.sentence}" —
+      <strong style="color:${color}">${entry.score}%</strong>
+    </li>`;
+  }).join("");
+  } catch (err) {
+    console.error("Failed to load practice log:", err);
+  }
+}
+async function viewLog(filter = "recent") {
+  try {
+    const res = await fetch(`http://127.0.0.1:5000/practice-log?filter=${filter}`);
+    const log = await res.json();
+    const logOutput = document.getElementById("logOutput");
+
+    if (!log || log.length === 0) {
+      logOutput.innerHTML = "<li>No practice history yet.</li>";
+      return;
+    }
+
+    logOutput.innerHTML = log.map(entry =>
+      `<li>${entry.date}: "${entry.sentence}" — Score: ${entry.score}%</li>`
+    ).join("");
+  } catch (err) {
+    console.error("Failed to load practice log:", err);
+  }
+}
+function exportLog(type) {
+  const url = type === "csv"
+    ? "http://127.0.0.1:5000/export-log/csv"
+    : "http://127.0.0.1:5000/export-log/json";
+
+  window.open(url, "_blank"); // open in new tab / download
+}
+
+async function resetProgress() {
+  if (!confirm("Are you sure you want to reset all progress?")) return;
+
+  try {
+    await fetch("http://127.0.0.1:5000/reset-progress", { method: "POST" });
+    alert("Progress reset!");
+    loadStats();   // refresh stats
+    viewLog();     // refresh log
+  } catch (err) {
+    console.error("Failed to reset progress:", err);
+  }
+}
