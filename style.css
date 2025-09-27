@@ -74,3 +74,15 @@ button:hover {
   font-size: 1rem;
   box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
 }
+.loading {
+  background-color: orange !important;
+  color: black !important;
+  cursor: wait !important;
+  transform: scale(1.05); /* make button grow slightly */
+}
+
+.success {
+  background-color: limegreen !important;
+  color: white !important;
+  transform: scale(1.05);
+}
