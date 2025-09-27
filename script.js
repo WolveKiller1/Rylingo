@@ -1,3 +1,4 @@
+console.log("✅ script.js loaded");
 // --- Day 20 helpers ---
 let practiceCount = Number(localStorage.getItem("practiceCount") || 0);
 let currentTarget = ""; // keep the current sentence here
@@ -434,3 +435,46 @@ async function resetProgress() {
     console.error("Failed to reset progress:", err);
   }
 }
+async function startRecording() {
+  console.log("startRecording clicked");
+  const recordBtn = document.getElementById("recordBtn");
+  recordBtn.textContent = "🎤 Recording...";
+  recordBtn.disabled = true;
+  recordBtn.classList.add("loading");
+
+  await new Promise(r => setTimeout(r, 3000));
+
+  recordBtn.textContent = "🎤 Start Recording";
+  recordBtn.disabled = false;
+  recordBtn.classList.remove("loading");
+  recordBtn.classList.add("success");
+
+  setTimeout(() => recordBtn.classList.remove("success"), 1000);
+
+  document.getElementById("results").innerHTML =
+    "<p style='color: white;'>✅ Recording captured (simulated)</p>";
+}
+
+async function evaluateSpeech() {
+  console.log("evaluateSpeech clicked");
+  const evaluateBtn = document.getElementById("evaluateBtn");
+  evaluateBtn.textContent = "⏳ Evaluating...";
+  evaluateBtn.disabled = true;
+  evaluateBtn.classList.add("loading");
+
+  await new Promise(r => setTimeout(r, 2000));
+
+  evaluateBtn.textContent = "💬 Evaluate My Speech";
+  evaluateBtn.disabled = false;
+  evaluateBtn.classList.remove("loading");
+  evaluateBtn.classList.add("success");
+
+  setTimeout(() => evaluateBtn.classList.remove("success"), 1000);
+
+  document.getElementById("results").innerHTML +=
+    "<p style='color: green;'>✅ Evaluation complete (simulated)</p>";
+}
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("recordBtn").addEventListener("click", startRecording);
+  document.getElementById("evaluateBtn").addEventListener("click", evaluateSpeech);
+});
