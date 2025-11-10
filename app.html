@@ -5,41 +5,71 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Rylingo (Beta)</h1>
-  <div id="progress">Sentences practiced: 0</div>
-  <div id="globalStats">
-  <h3>Your Progress (All Time)</h3>
-  <p id="attempts">Attempts: 0</p>
-  <p id="averageScore">Average Score: 0</p>
-  <p id="todayAttempts">Today’s Attempts: 0</p>
+  <header class="app-header">
+  <h1>🌀 Rylingo</h1>
+  <p>Confidence-First Language Practice</p>
+  </header>
+  <div class="card">
+    <h2>📊 Your Progress</h2>
+    <div id="progress">Sentences practiced: 0</div>
+    <div class="progress-container">
+      <div id="progressBar"></div>
+    </div>
+    <div id="consistencyTracker" class="consistency-tracker">
+  <h3>🗓️ This Week’s Practice</h3>
+    <div class="tracker-dots" id="trackerDots">
+      <span class="dot" data-day="1"></span>
+      <span class="dot" data-day="2"></span>
+      <span class="dot" data-day="3"></span>
+      <span class="dot" data-day="4"></span>
+      <span class="dot" data-day="5"></span>
+      <span class="dot" data-day="6"></span>
+      <span class="dot" data-day="7"></span>
+    </div>
   </div>
-  <div id="dailyChallenge" style="margin-bottom:1.5rem;">
+    <div id="globalStats">
+      <h3>Your Progress (All Time)</h3>
+      <p id="attempts">Attempts: 0</p>
+      <p id="averageScore">Average Score: 0</p>
+      <p id="todayAttempts">Today’s Attempts: 0</p>
+    </div>
+  </div>
+
+  <div class="card">
     <h2>🌟 Today’s Challenge</h2>
     <p id="dailyChallengeText" style="cursor:pointer; color:#007bff; text-decoration:underline;">
       Loading...
     </p>
+    <p id="challengeStatus" style="font-weight:bold; color:green;"></p>
+    <div id="encouragement" style="margin-top:1rem;font-weight:bold;"></div>
   </div>
-  <p id="challengeStatus" style="font-weight:bold; color:green;"></p>
-  <div id="encouragement" style="margin-top:1rem;font-weight:bold;"></div>
-  <h2>🔤 Word Practice</h2>
-  <input type="text" id="wordInput" placeholder="Enter a word" />
-  <button onclick="lookupWord()">🔊 Hear Pronunciation</button>
-  <div id="output"></div>
 
-  <hr>
+  <div class="card">
+    <h2>🔤 Word Practice</h2>
+    <input type="text" id="wordInput" placeholder="Enter a word" />
+    <button onclick="lookupWord()">🔊 Hear Pronunciation</button>
+    <div id="output"></div>
+  </div>
 
+
+
+<div class="card">
   <h2>🗣️ Sentence Practice</h2>
-  <button id="nextSentenceBtn">Next Sentence</button>
-  <p id="targetSentenceDisplay"></p>
 
+  <div class="practice-buttons">
+    <button id="nextSentenceBtn">➡️ Next Sentence</button>
+  </div>
+
+  <p id="targetSentenceDisplay"></p>
   <input type="hidden" id="targetSentence" name="targetSentence" />
-  <!-- Hidden input so script.js can pass the target to backend -->
-  <div class="controls">
+
+  <div class="practice-buttons">
     <button id="recordBtn">🎤 Start Recording</button>
     <button id="stopBtn" disabled>⏹ Stop</button>
     <button id="evaluateBtn">💬 Evaluate My Speech</button>
     <button id="retryBtn" style="display:none;" onclick="tryAgain()">🔄 Try Again</button>
   </div>
+</div>
 
   <p id="targetSentenceDisplay"></p>
   <div id="results"></div>
@@ -47,23 +77,20 @@
 
   <div id="aiFeedback"></div>
 
-  <div id="results"></div>
-  <button onclick="viewLog()">📜 View Practice Log</button>
-  <div id="practiceHistory" style="margin-top:2rem; padding:1rem; border:1px solid #000000; border-radius:8px; background:#007bff;">
+
+  <div class="card" id="practiceLogCard" style="margin-top:2rem; padding:1rem; border:1px solid #000000; border-radius:8px; background:#007bff;">
     <h2>📜 Practice Log</h2>
     <div style="margin-bottom:0.5rem;">
-      <button onclick="viewLog('recent')">Recent</button>
-      <button onclick="viewLog('today')">Today</button>
-      <button onclick="viewLog('best')">Best</button>
-      <button onclick="viewLog('all')">All</button>
-      <button onclick="exportLog('json')">⬇️ Export JSON</button>
-      <button onclick="exportLog('csv')">⬇️ Export CSV</button>
-      <ul id="logOutput" style="list-style-type:none; padding-left:0;"></ul>
-      <button onclick="resetProgress()">🗑 Reset Progress</button>
+      <button class="log-btn" onclick="viewLog('recent')">Recent</button>
+      <button class="log-btn" onclick="viewLog('today')">Today</button>
+      <button class="log-btn" onclick="viewLog('best')">Best</button>
+      <button class="log-btn" onclick="viewLog('all')">All</button>
+      <button class="log-btn" onclick="exportLog('json')">⬇️ Export JSON</button>
+      <button class="log-btn" onclick="exportLog('csv')">⬇️ Export CSV</button>
+      <button class="log-btn" onclick="resetProgress()">🗑 Reset Progress</button>
     </div>
     
   </div>
-  <hr>
   <p style="margin-top: 2rem; font-size: 0.95rem;">
   <canvas id="confettiCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;"></canvas>
   💬 Tried it? <a href="https://forms.gle/Pg4qnUqrroSxsvy98" target="_blank">Leave feedback here</a> — help shape the future of Rylingo.
