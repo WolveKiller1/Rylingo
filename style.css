@@ -8,18 +8,6 @@ body {
   background-color: #0F0F0F;
   color: #F5F5F5;
 }
-button {
-  margin: 0.25rem;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  border: none;
-  background: #007bff;
-  color: white;
-  cursor: pointer;
-}
-button:hover {
-  background: #0056b3;
-}
 input, button {
   padding: 10px;
   font-size: 16px;
@@ -34,35 +22,10 @@ input, button {
   margin-top: 30px;
 }
 
-button {
-  background: #3366ff;
-  color: white;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  margin: 10px 0;
-}
-button:hover {
-background: #254eda;
-}
 .controls {
   margin-top: 15px;
   display: flex;
   gap: 10px;
-}
-button {
-  padding: 10px 15px;
-  border: none;
-  border-radius: 8px;
-  background: #4CAF50;
-  color: white;
-  font-size: 14px;
-  cursor: pointer;
-}
-button:hover {
-  background: #45a049;
 }
 #results {
   display: none;             /* hidden by default */
@@ -86,3 +49,203 @@ button:hover {
   color: white !important;
   transform: scale(1.05);
 }
+/* --- RYLINGO V2 BUTTONS + CARDS --- */
+
+button {
+  margin: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  border: none;
+  background: #3366FF;   /* primary blue */
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+button:hover {
+  background: #254EDA;   /* darker blue hover */
+  transform: scale(1.05);
+}
+
+button:disabled {
+  background: #777;
+  cursor: not-allowed;
+}
+
+/* Secondary (green) option */
+button.secondary {
+  background: #4CAF50;
+}
+button.secondary:hover {
+  background: #3c8d40;
+}
+/* --- Secondary buttons for the Practice Log --- */
+button.log-btn {
+  background: #3c8d40;
+  color: #e6e6e6;
+  border: 2px solid #3c8d40;
+  font-weight: 600;
+}
+
+button.log-btn:hover {
+  background: #3c8d40;
+  color: #e6e6e6;
+}
+
+
+/* Card layout for dark mode sections */
+.card {
+  background: #1A1A1A;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+/* --- RYLINGO V2 LAYOUT + HEADER --- */
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  padding: 0 1rem;
+  background-color: #0F0F0F; /* your dark background */
+  color: #F5F5F5;
+}
+
+
+.app-header {
+  text-align: center;
+  background: linear-gradient(135deg, #3366FF, #2196F3);
+  color: white;
+  width: 100%;
+  padding: 2rem 0 1.5rem 0;
+  border-bottom: 4px solid #1A1A1A;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.app-header p {
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.card {
+  width: 100%;
+  max-width: 650px;
+  margin: 20px 0;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  text-align: center;
+}
+#practiceLogCard {
+  text-align: left;
+}
+.practice-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.progress-container {
+  width: 100%;
+  background-color: #333;
+  border-radius: 10px;
+  overflow: hidden;
+  height: 16px;
+  margin-top: 10px;
+}
+
+#progressBar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #4CAF50, #81C784);
+  transition: width 0.6s ease-in-out;
+}
+.challenge-complete {
+  background-color: #4CAF50;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: bold;
+  display: inline-block;
+  margin-top: 8px;
+}
+/* ✨ Smooth fade-in for messages and stats */
+.fade-in {
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 🌟 Pulse effect for the progress bar when updated */
+.pulse {
+  animation: pulseGlow 0.8s ease-in-out;
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 0px #4CAF50; }
+  50% { box-shadow: 0 0 10px #4CAF50; }
+  100% { box-shadow: 0 0 0px #4CAF50; }
+}
+
+/* 🎉 Pop effect for challenge completion */
+.pop {
+  animation: popIn 0.5s ease-out;
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+#dailyChallengeText:hover {
+  color: #ff9800;
+  transform: scale(1.03);
+  transition: all 0.2s ease-in-out;
+}
+.consistency-tracker {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.tracker-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #444;
+  opacity: 0.5;
+  transition: all 0.3s ease;
+}
+
+.dot.active {
+  background-color: #4CAF50;
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.dot:hover {
+  transform: scale(1.2);
+  background-color: #81C784;
+}
+
