@@ -3,11 +3,41 @@ console.log("✅ script.js loaded");
 let practiceCount = Number(localStorage.getItem("practiceCount") || 0);
 let currentTarget = ""; // keep the current sentence here
 
+function getLocalPracticeCount() {
+  const saved = localStorage.getItem("practiceCount");
+  return saved ? parseInt(saved, 10) : 0;
+}
+
 function updateProgress() {
   localStorage.setItem("practiceCount", practiceCount);
   const el = document.getElementById("progress");
   if (el) el.innerText = `Sentences practiced: ${practiceCount}`;
+
+  // Update progress bar locally
+  const progressBar = document.getElementById("progressBar");
+  if (progressBar) {
+    const percent = Math.min((practiceCount / 50) * 100, 100);
+    progressBar.style.width = percent + "%";
+    progressBar.classList.remove("pulse");
+    void progressBar.offsetWidth; // restart animation
+    progressBar.classList.add("pulse");
+  }
 }
+// ✅ Mark today as practiced
+const practicedDays = JSON.parse(localStorage.getItem("practicedDays")) || [];
+const todayKey = new Date().toISOString().split("T")[0];
+if (!practicedDays.includes(todayKey)) {
+  practicedDays.push(todayKey);
+  localStorage.setItem("practicedDays", JSON.stringify(practicedDays));
+  // ✅ Sync with backend
+  fetch("http://127.0.0.1:5000/update-tracker", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ practicedDays })
+  });
+}
+updateConsistencyTracker();
+
 
 function colorFor(score) {
   const n = Number(score || 0);
@@ -183,6 +213,7 @@ async function lookupWord() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            attempts: practiceCount,
             score: data.score,
             targetSentence: data.target
           })
@@ -241,9 +272,38 @@ document.getElementById("nextSentenceBtn").addEventListener("click", () => {
   // Keep it in a hidden input for backend
   document.getElementById("targetSentence").value = sentence;
 });
-window.onload = () => {
-  document.getElementById("nextSentenceBtn").click();
+async function loadTrackerFromServer() {
+  try {
+    const res = await fetch("http://127.0.0.1:5000/user-data");
+    const data = await res.json();
+
+    // Save backend tracker data locally
+    if (data.practicedDays) {
+      localStorage.setItem("practicedDays", JSON.stringify(data.practicedDays));
+    }
+
+    // Update the visual dots
+    updateConsistencyTracker();
+  } catch (err) {
+    console.error("Failed to load tracker data:", err);
+  }
+}
+
+window.onload = async () => {
+  try {
+    // ✅ Load tracker data from backend first
+    await loadTrackerFromServer();
+
+    // ✅ Load stats from backend (so numbers show correctly)
+    await loadStats();
+
+    // ✅ Then start the daily sentence
+    document.getElementById("nextSentenceBtn").click();
+  } catch (err) {
+    console.error("Startup error:", err);
+  }
 };
+
 document.getElementById("retryBtn").style.display = "inline-block";
 document.getElementById("retryBtn").onclick = () => {
   document.getElementById("results").innerHTML = ""; // clear old results
@@ -281,7 +341,12 @@ async function loadStats() {
   try {
     const res = await fetch("http://127.0.0.1:5000/stats");
     const stats = await res.json();
-
+    // Merge backend and local data
+    const localCount = getLocalPracticeCount();
+    if (localCount > stats.attempts) {
+      stats.attempts = localCount;
+    }
+    // Update text stats
     document.getElementById("attempts").textContent =
       `Attempts: ${stats.attempts}`;
     document.getElementById("averageScore").textContent =
@@ -289,6 +354,7 @@ async function loadStats() {
     document.getElementById("todayAttempts").textContent =
       `Today’s Attempts: ${stats.today_attempts}`;
 
+    // Encouragement messages
     let encouragement = "";
     if (stats.today_attempts === 0) {
       encouragement = "👋 Ready for a quick practice?";
@@ -299,22 +365,27 @@ async function loadStats() {
     } else {
       encouragement = "🌟 Amazing work — your voice is getting stronger!";
     }
-    document.getElementById("encouragement").textContent = encouragement;
+    const encouragementEl = document.getElementById("encouragement");
+    encouragementEl.textContent = encouragement;
+    encouragementEl.classList.remove("fade-in");
+    void encouragementEl.offsetWidth; // restart animation
+    encouragementEl.classList.add("fade-in");
 
-    // ✅ New: Challenge status
+
+    // ✅ Challenge status (now styled)
+    const challengeStatus = document.getElementById("challengeStatus");
     if (stats.user_completed_challenge) {
-      document.getElementById("challengeStatus").textContent =
-        "✅ Daily Challenge completed!";
+      challengeStatus.innerHTML = "<span class='challenge-complete pop'>✅ Challenge Complete!</span>";
       launchConfetti();
     } else {
-      document.getElementById("challengeStatus").textContent =
-        "❌ Daily Challenge not done yet.";
+      challengeStatus.innerHTML = "";
     }
 
   } catch (err) {
     console.error("Failed to load stats:", err);
   }
 }
+
 
 async function loadDailyChallenge() {
   try {
@@ -478,3 +549,21 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("recordBtn").addEventListener("click", startRecording);
   document.getElementById("evaluateBtn").addEventListener("click", evaluateSpeech);
 });
+function updateConsistencyTracker() {
+  const dots = document.querySelectorAll(".dot");
+  const today = new Date();
+  const practicedDays = JSON.parse(localStorage.getItem("practicedDays")) || [];
+
+  dots.forEach((dot, index) => {
+    const dayOffset = 6 - index;
+    const date = new Date();
+    date.setDate(today.getDate() - dayOffset);
+
+    const dateKey = date.toISOString().split("T")[0];
+    if (practicedDays.includes(dateKey)) {
+      dot.classList.add("active");
+    } else {
+      dot.classList.remove("active");
+    }
+  });
+}
