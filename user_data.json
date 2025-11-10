@@ -1,0 +1,14 @@
+{
+  "stats": {
+    "attempts": 0,
+    "average_score": 0,
+    "today_attempts": 0,
+    "total_score": 0,
+    "last_practice_date": "",
+    "user_completed_challenge": false
+  },
+  "practicedDays": [
+    "2025-11-04"
+  ],
+  "practiceLog": []
+}
