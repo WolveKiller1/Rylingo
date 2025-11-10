@@ -11,6 +11,31 @@ import difflib
 import random
 from datetime import date
 import csv
+import json
+from pathlib import Path
+
+DATA_FILE = Path("user_data.json")
+
+def load_user_data():
+    if not DATA_FILE.exists():
+        return {
+            "stats": {
+                "attempts": 0,
+                "average_score": 0,
+                "today_attempts": 0,
+                "total_score": 0,
+                "last_practice_date": "",
+                "user_completed_challenge": False
+            },
+            "practicedDays": [],
+            "practiceLog": []
+        }
+    with open(DATA_FILE, "r") as f:
+        return json.load(f)
+
+def save_user_data(data):
+    with open(DATA_FILE, "w") as f:
+        json.dump(data, f, indent=2)
 
 sentences = [
     "My name is Alex.",
@@ -108,35 +133,26 @@ def evaluate():
 
 @app.route("/update-stats", methods=["POST"])
 def update_stats():
-    data = request.json
-    score = data.get("score", 0)
-    target_sentence = data.get("targetSentence", "")
+    data = load_user_data()
+    stats = data["stats"]
+
+    new_data = request.json
+    score = new_data.get("score", 0)
+    target_sentence = new_data.get("targetSentence", "")
 
     # Update stats
-    user_stats["attempts"] += 1
-    user_stats["total_score"] += score
-    user_stats["average_score"] = (
-        user_stats["total_score"] / user_stats["attempts"]
-        if user_stats["attempts"] > 0 else 0
-    )
+    stats["attempts"] += 1
+    stats["total_score"] += score
+    stats["average_score"] = stats["total_score"] / stats["attempts"]
+    stats["today_attempts"] += 1
+    stats["last_practice_date"] = str(date.today())
 
-    # Daily attempts logic
-    today = str(date.today())
-    if user_stats["last_practice_date"] != today:
-        user_stats["today_attempts"] = 0
-    user_stats["today_attempts"] += 1
-    user_stats["last_practice_date"] = today
+    if target_sentence == stats.get("daily_challenge"):
+        stats["user_completed_challenge"] = True
 
-    # ✅ Check if today’s challenge was completed
-    if target_sentence == user_stats.get("daily_challenge"):
-        user_stats["user_completed_challenge"] = True
-        # ✅ Log this attempt
-    practice_log.append({
-        "sentence": target_sentence,
-        "score": score,
-        "date": today
-    })
-    return jsonify(user_stats)
+    save_user_data(data)
+    return jsonify(stats)
+
 @app.route("/practice-log", methods=["GET"])
 def get_log():
     filter_type = request.args.get("filter", "recent")
@@ -155,19 +171,9 @@ def get_log():
 
 @app.route("/stats", methods=["GET"])
 def get_stats():
-    today = str(date.today())
-    if user_stats["daily_challenge_date"] != today:
-        # pick a new daily challenge sentence
-        user_stats["daily_challenge"] = random.choice([
-            "I like pizza.",
-            "She drinks water.",
-            "They are learning fast.",
-            "Where is the train station?",
-            "I will call you tomorrow."
-        ])
-        user_stats["daily_challenge_date"] = today
-        user_stats["user_completed_challenge"] = False
-    return jsonify(user_stats)
+    data = load_user_data()
+    return jsonify(data["stats"])
+
 
 @app.route("/daily-challenge", methods=["GET"])
 def daily_challenge():
@@ -222,6 +228,20 @@ def reset_progress():
     }
 
     return jsonify({"message": "Progress reset successfully."})
+@app.route("/update-tracker", methods=["POST"])
+def update_tracker():
+    data = load_user_data()
+    body = request.json
+    practiced_days = body.get("practicedDays", [])
+    data["practicedDays"] = practiced_days
+    save_user_data(data)
+    return jsonify({"message": "Tracker updated"})
+
+@app.route("/user-data", methods=["GET"])
+def get_user_data():
+    data = load_user_data()
+    return jsonify(data)
+
 
 
 #Above is the fake response for now. Once AI is active, this will be replaced with real transcription and feedback below.
